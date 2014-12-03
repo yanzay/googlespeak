@@ -3,6 +3,20 @@ Google Speak
 
 Go implementation for transform text to speech using Google Translate.
 
+Usage:
+```go
+package main
+
+import (
+  "github.com/yanzay/googlespeak"
+)
+
+func main() {
+  googlespeak.Say("hi") // English by default
+  googlespeak.Say("привет", "ru")
+}
+```
+
 Supported languages:
  * af (Afrikaans)
  * ar (Arabic)
@@ -44,17 +58,3 @@ Supported languages:
  * tr (Turkish)
  * vi (Vietnamese)
  * zh (Chinese)
-
-Usage:
-```go
-package main
-
-import (
-  "github.com/yanzay/googlespeak"
-)
-
-func main() {
-  googlespeak.Say("hi") // English by default
-  googlespeak.Say("привет", "ru")
-}
-```

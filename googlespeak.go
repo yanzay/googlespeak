@@ -2,8 +2,8 @@ package googlespeak
 
 import (
 	"errors"
-	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -22,9 +22,26 @@ func Say(s string, args ...string) error {
 	if len(args) > 0 {
 		lang = args[0]
 	}
-	fmt.Printf("lang: %v\n", lang)
-	err := speak(s, lang)
+
+	err := validateParams(s, lang)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Lang: %s, say: %s", lang, s)
+	err = speak(s, lang)
 	return err
+}
+
+func validateParams(s, lang string) error {
+	if utf8.RuneCountInString(s) > 100 {
+		return errors.New("Text exceeds max char limit (100)!")
+	}
+
+	if !isValidLang(lang) {
+		return errors.New("Invalid language code!")
+	}
+	return nil
 }
 
 func isValidLang(s string) bool {
@@ -33,18 +50,11 @@ func isValidLang(s string) bool {
 			return true
 		}
 	}
+	log.Printf("Invalid language: %s", s)
 	return false
 }
 
 func getAudio(s, lang string) (io.ReadCloser, error) {
-	if utf8.RuneCountInString(s) > 100 {
-		return nil, errors.New("Text exceeds max char limit (100)!")
-	}
-
-	if !isValidLang(lang) {
-		return nil, errors.New("Invalid language code!")
-	}
-
 	resp, err := http.Get("http://translate.google.com/translate_tts" +
 		"?ie=UTF-8&tl=" + lang + "&q=" + url.QueryEscape(s))
 	if err != nil {
@@ -88,10 +98,15 @@ func cacheAudio(stream io.Reader, s, lang string) (io.ReadCloser, error) {
 }
 
 func speak(s, lang string) error {
+	log.Printf("Get from cache %s/%s", lang, s)
 	audio, err := getFromCache(s, lang)
 	if err != nil {
-		stream, _ := getAudio(s, lang)
-		audio, _ = cacheAudio(stream, s, lang)
+		log.Printf("Cache for %s/%s not found. Trying to get audio from Google", lang, s)
+		stream, err := getAudio(s, lang)
+		if err == nil {
+			log.Printf("Caching stream for %s/%s", lang, s)
+			audio, _ = cacheAudio(stream, s, lang)
+		}
 	}
 	defer audio.Close()
 	err = play(audio)

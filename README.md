@@ -1,7 +1,7 @@
 Google Speak
 ============
 
-Go implementation for transform text to speach using Google Translate.
+Go implementation for transform text to speech using Google Translate.
 
 Supported languages:
  * af (Afrikaans)
